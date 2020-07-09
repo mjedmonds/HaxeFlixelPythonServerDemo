@@ -1,0 +1,17 @@
+{
+	"search.exclude": {
+		"export/**/*.hx": true
+	},
+	"[haxe]": {
+		"editor.formatOnSave": true,
+		"editor.formatOnPaste": true,
+		"editor.codeActionsOnSave": {
+			"source.sortImports": true
+		}
+	},
+	"haxe.configureations": [
+		["WebSockerServerPy.hxml", "-debug"]
+	],
+	"haxe.enableExtendedIndentation": false,
+	"python.pythonPath": "/home/mark/miniconda3/envs/random/bin/python"
+}

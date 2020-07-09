@@ -1,0 +1,4 @@
+--python export/server/python/WebSocketServerPy.py
+--library haxe-ws
+--class-path source
+--main server.WebSocketServerPy

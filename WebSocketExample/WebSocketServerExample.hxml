@@ -1,0 +1,3 @@
+--python WebSocketServerExample.py
+--library haxe-ws
+--main WebSocketServerExample
