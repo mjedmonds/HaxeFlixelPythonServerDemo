@@ -1,0 +1,3 @@
+--python export/server/python/PointArray.py
+--class-path source
+common.PointArray
