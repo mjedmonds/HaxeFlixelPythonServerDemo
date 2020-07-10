@@ -1,8 +1,11 @@
 package client;
 
+import client.WebSocketClientJS;
+import common.ParamServer;
 import flixel.FlxG;
 import flixel.FlxState;
 import flixel.text.FlxText;
+import flixel.ui.FlxButton;
 
 /**
  * @author .:BuzzJeux:.
@@ -13,10 +16,17 @@ class PlayState extends FlxState
 
 	var _level:TiledLevel;
 	var _howto:FlxText;
+	var _testbutton:FlxButton;
+	var _ws_socket:WebSocketClientJS;
+	var _param_server:ParamServer;
 
 	override public function create():Void
 	{
-		FlxG.mouse.visible = false;
+		_param_server = new ParamServer();
+		_ws_socket = new WebSocketClientJS(_param_server.host, _param_server.port);
+		_ws_socket.create();
+		FlxG.mouse.visible = true;
+		FlxG.mouse.useSystemCursor = true;
 		bgColor = 0xFF18A068;
 
 		// Load the level's tilemaps
@@ -32,12 +42,9 @@ class PlayState extends FlxState
 		_level.loadObjects(this);
 
 		#if !mobile
-		// Set and create Txt Howto
-		_howto = new FlxText(0, 225, FlxG.width);
-		_howto.alignment = CENTER;
-		_howto.text = "Use the ARROW KEYS or WASD to move around.";
-		_howto.scrollFactor.set(0, 0);
-		add(_howto);
+		// var message_onclick = _ws_socket.send_message.bind()
+		_testbutton = new FlxButton(0, 225, "Send message", _ws_socket.send_message);
+		add(_testbutton);
 		#end
 	}
 

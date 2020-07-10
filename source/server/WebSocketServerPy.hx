@@ -1,21 +1,26 @@
 package server;
 
 import common.ParamServer;
+import common.PointArray.*;
 import haxe.CallStack;
 import haxe.Json;
+import haxe.Serializer;
+import haxe.Unserializer;
 import haxe.io.Bytes;
 import haxe.net.WebSocket;
 import haxe.net.WebSocketServer;
 
-class WebSocketHandler
+class WebSocketServerHandler
 {
 	static var _nextId = 0;
 
 	var _id = _nextId++;
 	var _websocket:WebSocket;
+	var _msg_prefix:String;
 
 	public function new(websocket:WebSocket)
 	{
+		_msg_prefix = 'shandler$_id:';
 		_websocket = websocket;
 		_websocket.onopen = onopen;
 		_websocket.onclose = onclose;
@@ -27,35 +32,52 @@ class WebSocketHandler
 	public function update():Bool
 	{
 		_websocket.process();
+		// trace('$_msg_prefix update');
 		return _websocket.readyState != Closed;
 	}
 
 	function onopen():Void
 	{
-		trace('$_id:open');
+		log('open');
 		_websocket.sendString('Hello from server');
 	}
 
 	function onerror(message:String):Void
 	{
-		trace('$_id:error: $message');
+		log('error:$message');
 	}
 
 	function onmessageString(message:String):Void
 	{
-		trace('$_id:message: $message');
-		_websocket.sendString(message);
+		log('string:$message');
+		try
+		{
+			var points = Unserializer.run(message);
+			log('points:${points.toString()}');
+		}
+		catch (e:Dynamic) {}
+		_websocket.sendString('Server recevied message=$message');
 	}
 
 	function onmessageBytes(message:Bytes):Void
 	{
-		trace('$_id:message bytes:' + message.toHex());
+		log('bytes:' + message.toHex());
 		_websocket.sendBytes(message);
 	}
 
 	function onclose():Void
 	{
-		trace('$_id:close');
+		log('close');
+	}
+
+	function log(message:String):Void
+	{
+		trace('$_msg_prefix$message');
+	}
+
+	public function getID():Int
+	{
+		return _id;
 	}
 }
 
@@ -74,27 +96,41 @@ class WebSocketServerPy
 				var websocket = server.accept();
 				if (websocket != null)
 				{
-					handlers.push(new WebSocketHandler(websocket));
+					var handler = new WebSocketServerHandler(websocket);
+					handlers.push(handler);
+					trace('Server: added client ${handler.getID()}');
 				}
-
+			}
+			catch (e:Dynamic)
+			{
+				// no op, we will error all the time because .accept() will error if no data comes
+				Sys.sleep(0.05);
+			}
+			try
+			{
 				var toRemove = [];
 				for (handler in handlers)
 				{
 					if (!handler.update())
 					{
+						trace('Server: update() failed from client ${handler.getID()}');
 						toRemove.push(handler);
 					}
 				}
 
 				while (toRemove.length > 0)
-					handlers.remove(toRemove.pop());
+				{
+					var handler = toRemove.pop();
+					trace('Server: removing ${handler.getID()}');
+					handlers.remove(handler);
+				}
 			}
 			catch (e:Dynamic)
 			{
-				// no op, we will error all the time because .accept will error if no data comes
-				Sys.sleep(0.1);
-				// trace('Error', e);
-				// trace(CallStack.exceptionStack());
+				// no op
+				Sys.sleep(0.05);
+				trace('Error', e);
+				trace(CallStack.exceptionStack());
 			}
 		}
 	}
